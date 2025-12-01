@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="ar">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Muhasaba — Offline</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#0A1A2F">
+<link rel="icon" href="/assets/icons/icon-192.svg" sizes="192x192">
+<style>
+:root{--bg:#f5f6f8;--card:#fff;--muted:#6b7280;--accent:#0A1A2F}
+html,body{height:100%;margin:0;font-family:Inter,system-ui,Arial;background:var(--bg);color:#0f172a}
+.header{display:flex;align-items:center;gap:12px;padding:14px;background:var(--card);box-shadow:0 2px 8px rgba(0,0,0,0.06)}
+.logo{width:56px;height:56px;border-radius:12px;background:var(--accent);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:18px}
+.container{padding:14px;max-width:980px;margin:0 auto}
+.title{font-size:18px;font-weight:700}
+.search{width:100%;padding:10px;border-radius:8px;border:1px solid #e6eef6;margin-bottom:12px;box-sizing:border-box}
+.card{background:var(--card);border-radius:12px;padding:12px;margin-bottom:12px;box-shadow:0 4px 14px rgba(0,0,0,0.05)}
+.method{display:inline-block;padding:6px 9px;border-radius:8px;color:#fff;font-weight:700;margin-bottom:8px}
+.GET{background:#2A9D8F}.POST{background:#264653}.PATCH{background:#F4A261}.DELETE{background:#E76F51}
+.path{font-family:monospace;background:#f1f5f9;padding:6px;border-radius:8px;display:inline-block;margin-top:6px}
+.meta{color:var(--muted);font-size:13px;margin-top:6px}
+.footer{text-align:center;color:var(--muted);padding:18px}
+.offline{display:none;background:#fff3cd;border:1px solid #ffeeba;padding:10px;border-radius:8px;margin-bottom:12px;color:#856404}
+.offline.show{display:block}
+</style>
+</head>
+<body dir="rtl">
+
+  <div class="header">
+    <div class="logo">MH</div>
+    <div>
+      <div class="title">Muhasaba</div>
+      <div class="meta">محاسبة روحية — مستندات API ووضع أوفلاين</div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div id="offlineNotice" class="offline">أنت الآن أوفلاين — بعض الوظائف قد لا تكون متاحة.</div>
+    <input id="search" class="search" placeholder="ابحث عن مسار أو كلمة..." />
+    <div id="list"></div>
+    <div class="footer">Muhasaba — نسخة قابلة للتثبيت</div>
+  </div>
+
+<script>
+// عيّنة SPEC قصيرة — يمكنك لاحقاً لصق SPEC الكامل هنا
+const SPEC = {
+  "openapi":"3.0.3",
+  "info":{"title":"Muhasaba API","version":"1.0.0"},
+  "paths":{
+    "/auth/register":{"post":{"summary":"Register a new user"}},
+    "/auth/login":{"post":{"summary":"Login"}},
+    "/auth/device-anon":{"post":{"summary":"Create device anonymous account"}},
+    "/users/me":{"get":{"summary":"Get current user profile"}},
+    "/hasanat":{"get":{"summary":"List user habits"},"post":{"summary":"Create a new habit"}},
+    "/hasanat/{id}/log":{"post":{"summary":"Log a hasana"}},
+    "/sayyiat":{"post":{"summary":"Start misdeed file"}},
+    "/sayyiat/{id}/step":{"post":{"summary":"Record a tawbah step"}},
+    "/niyyah":{"get":{"summary":"List niyyah entries"},"post":{"summary":"Create niyyah entry"}},
+    "/quran/progress":{"post":{"summary":"Log quran progress"}},
+    "/insights/daily":{"get":{"summary":"Get daily aggregated insights"}}
+  }
+};
+
+const endpoints=[];
+for(const p in SPEC.paths){ for(const m in SPEC.paths[p]){ const op=SPEC.paths[p][m]; endpoints.push({path:p,method:m.toUpperCase(),summary:op.summary||''}); } }
+
+function el(t,a={},c=[]){ const e=document.createElement(t); for(const k in a){ if(k==='class') e.className=a[k]; else if(k==='text') e.textContent=a[k]; else e.setAttribute(k,a[k]); } (Array.isArray(c)?c:[c]).forEach(x=>{ if(typeof x==='string') e.appendChild(document.createTextNode(x)); else if(x) e.appendChild(x); }); return e; }
+
+const list=document.getElementById('list');
+const search=document.getElementById('search');
+const offlineNotice=document.getElementById('offlineNotice');
+
+function render(q=''){ list.innerHTML=''; const f=(q||'').toLowerCase(); const found=endpoints.filter(ep=> (ep.path+' '+ep.summary).toLowerCase().includes(f)); if(found.length===0){ list.appendChild(el('div',{class:'card',text:'لا توجد نتائج.'})); return; } found.forEach(ep=>{ const c=el('div',{class:'card'}); c.appendChild(el('div',{class:'method '+ep.method,text:ep.method})); c.appendChild(el('div',{text:ep.summary})); c.appendChild(el('div',{class:'path',text:ep.path})); list.appendChild(c); }); }
+search.addEventListener('input',e=>render(e.target.value));
+render();
+
+// Offline indicator & SW register
+window.addEventListener('online',()=>offlineNotice.classList.remove('show'));
+window.addEventListener('offline',()=>offlineNotice.classList.add('show'));
+if('serviceWorker' in navigator){ navigator.serviceWorker.register('/service-worker.js').then(()=>console.log('SW registered')).catch(()=>console.warn('SW failed')); }
+</script>
+
+</body>
+</html>
