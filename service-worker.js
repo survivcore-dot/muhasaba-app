@@ -1,5 +1,6 @@
+
 // Muhasaba service-worker (relative paths for GitHub Pages)
-const CACHE_NAME = 'muhasaba-v3'; // <- زِد الرقم هنا كلما عدّلت لتفريغ الكاش القديم
+const CACHE_NAME = 'muhasaba-v3';
 const APP_SHELL = [
   './index.html',
   './manifest.json',
@@ -10,17 +11,13 @@ const APP_SHELL = [
 ];
 
 self.addEventListener('install', evt => {
-  // فور التثبيت نتخطى الانتظار ونخزّن كافة الملفات
   self.skipWaiting();
   evt.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
-      return cache.addAll(APP_SHELL);
-    })
+    caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL))
   );
 });
 
 self.addEventListener('activate', evt => {
-  // نحذف الكاشات القديمة فور التفعيل
   evt.waitUntil(
     caches.keys().then(keys => Promise.all(
       keys.filter(key => key !== CACHE_NAME).map(k => caches.delete(k))
@@ -29,7 +26,6 @@ self.addEventListener('activate', evt => {
 });
 
 self.addEventListener('message', event => {
-  // استقبال رسالة من الصفحة لإجبار التحديث (optional)
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
   }
@@ -37,38 +33,25 @@ self.addEventListener('message', event => {
 
 self.addEventListener('fetch', evt => {
   const req = evt.request;
-
-  // لو كانت محاولة تنقّل (navigation) أو طلب صفحة HTML -> network-first مع fallback للكاش/offline
   if (req.mode === 'navigate' || (req.method === 'GET' && req.headers.get('accept') && req.headers.get('accept').includes('text/html'))) {
     evt.respondWith(
       fetch(req).then(networkResponse => {
-        // خزّن نسخة في الكاش للطلبات المستقبلية
         const copy = networkResponse.clone();
         caches.open(CACHE_NAME).then(cache => cache.put(req, copy));
         return networkResponse;
-      }).catch(() => {
-        // لو لم يتوفر الإنترنت استخدم index.html أو offline.html
-        return caches.match('./index.html').then(r => r || caches.match('./offline.html'));
-      })
+      }).catch(() => caches.match('./index.html').then(r => r || caches.match('./offline.html')))
     );
     return;
   }
 
-  // لباقي الموارد: cache-first ثم network ثم fallback
   evt.respondWith(
     caches.match(req).then(cached => {
       if (cached) return cached;
       return fetch(req).then(networkResponse => {
-        // خزّن نسخة من المورد إن أمكن
-        caches.open(CACHE_NAME).then(cache => {
-          try { cache.put(req, networkResponse.clone()); } catch(e) { /* ignore */ }
-        });
+        caches.open(CACHE_NAME).then(cache => { try { cache.put(req, networkResponse.clone()); } catch(e){} });
         return networkResponse;
       }).catch(() => {
-        // لو مورد صورة، أعد استجابة فارغة أو غيرها
-        if (req.destination === 'image') {
-          return new Response('', { status: 404 });
-        }
+        if (req.destination === 'image') return new Response('', { status: 404 });
         return new Response('', { status: 503, statusText: 'offline' });
       });
     })
