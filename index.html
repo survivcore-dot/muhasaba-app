@@ -1,155 +1,186 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>Muhasaba — Offline API Viewer</title>
 
-  <!-- Manifest -->
   <link rel="manifest" href="./manifest.json">
-
-  <!-- Theme color -->
   <meta name="theme-color" content="#213a47">
 
-  <!-- Icons -->
   <link rel="icon" href="./assets/icons/icon-192.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="./assets/icons/icon-192.svg">
 
-  <!-- Style (بسيط مدمج داخل الصفحة لتجنب أي مشاكل) -->
   <style>
-    body {
-      margin: 0;
-      font-family: sans-serif;
-      background: #f7f9fa;
-      direction: rtl;
-      text-align: right;
+    :root{
+      --bg:#f7f9fa; --card:#fff; --muted:#6c757d; --accent:#2A9D8F; --accent-2:#0E8CE8; --header:#213a47;
+      --text:#0d1b2a;
     }
-
-    header {
-      background: #213a47;
-      color: white;
-      padding: 20px;
-      text-align: center;
-      font-size: 24px;
-      font-weight: bold;
+    [data-theme="dark"]{
+      --bg:#0b0f12; --card:#0f1720; --muted:#9aa6b2; --text:#e6eef6; --header:#122b35;
     }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial; background:var(--bg); color:var(--text); -webkit-font-smoothing:antialiased;}
+    header{background:linear-gradient(0deg, rgba(0,0,0,0.06), rgba(0,0,0,0)); padding:18px 16px 10px; display:flex; align-items:center; gap:12px; justify-content:space-between;}
+    .brand{display:flex; gap:12px; align-items:center}
+    .logo{width:56px;height:56px;border-radius:12px;background:var(--header);display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:18px}
+    h1{margin:0;font-size:20px}
+    .subtitle{font-size:12px;color:var(--muted); margin-top:3px}
+    .controls{display:flex; gap:8px; align-items:center}
+    .btn{background:var(--card); border:1px solid rgba(0,0,0,0.06); padding:8px 12px; border-radius:10px; cursor:pointer; font-size:14px}
+    .btn.primary{background:var(--accent); color:white; border:none}
+    .container{max-width:920px;margin:14px auto;padding:0 14px 60px}
+    .search{margin:10px 0}
+    .search input{width:100%; padding:12px 14px;border-radius:12px;border:1px solid #ddd;background:transparent}
+    .card{background:var(--card);border-radius:14px;padding:18px;margin-bottom:14px;box-shadow:0 6px 18px rgba(2,6,23,0.06); display:flex; justify-content:space-between; align-items:center; gap:12px}
+    .route-info{flex:1}
+    .route-info h3{margin:0 0 6px 0;font-size:20px}
+    .path{font-family:monospace;color:var(--muted);font-size:14px}
+    .badge{padding:8px 12px;border-radius:10px;color:white;font-weight:600}
+    .POST{background:var(--accent)}
+    .GET{background:var(--accent-2)}
+    footer{padding:18px;text-align:center;color:var(--muted);font-size:13px;}
 
-    .subtitle {
-      color: #ddd;
-      font-size: 14px;
-      margin-top: -8px;
-    }
-
-    .container {
-      padding: 16px;
-      max-width: 800px;
-      margin: auto;
-    }
-
-    .search-box input {
-      width: 100%;
-      padding: 12px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      font-size: 16px;
-      margin-bottom: 20px;
-    }
-
-    .card {
-      background: white;
-      border-radius: 12px;
-      padding: 16px;
-      margin-bottom: 16px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-    }
-
-    .method {
-      display: inline-block;
-      padding: 6px 12px;
-      border-radius: 6px;
-      font-size: 14px;
-      color: white;
-      margin-bottom: 8px;
-    }
-
-    .POST { background: #2A9D8F; }
-    .GET { background: #0E8CE8; }
-
-    footer {
-      text-align: center;
-      font-size: 14px;
-      color: #666;
-      padding: 20px 0;
+    /* small helpers */
+    .tiny{font-size:12px;color:var(--muted)}
+    .row{display:flex;gap:10px;align-items:center}
+    @media (min-width:900px){
+      header{padding:20px 30px}
+      .container{padding:0 20px}
+      .logo{width:64px;height:64px;font-size:20px}
     }
   </style>
 </head>
-
 <body>
-
-<header>
-  Muhasaba
-  <div class="subtitle">محاسبة روحية — مستندات API ووضع أوفلاين</div>
-</header>
-
-<div class="container">
-
-  <div class="search-box">
-    <input id="search" type="text" placeholder="ابحث عن مسار أو كلمة..." />
-  </div>
-
-  <!-- عيّنة من المسارات -->
-  <div id="routes">
-
-    <div class="card">
-      <span class="method POST">POST</span>
-      <h3>Register a new user</h3>
-      <div>auth/register/</div>
+  <header>
+    <div class="brand">
+      <div class="logo">MH</div>
+      <div>
+        <h1>Muhasaba</h1>
+        <div class="subtitle">محاسبة روحیة — مستندات API ووضع أوفلاين</div>
+      </div>
     </div>
 
-    <div class="card">
-      <span class="method POST">POST</span>
-      <h3>Login</h3>
-      <div>auth/login/</div>
+    <div class="controls">
+      <button id="toggleTheme" class="btn" title="تبديل الوضع">وضع</button>
+      <button id="updateApp" class="btn" title="تحديث التطبيق">تحديث</button>
+      <button id="clearCache" class="btn" title="مسح الكاش">مسح الكاش</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="search">
+      <input id="search" placeholder="ابحث عن مسار أو كلمة..." />
     </div>
 
-    <div class="card">
-      <span class="method POST">POST</span>
-      <h3>Create device anonymous account</h3>
-      <div>auth/device-anon/</div>
+    <div id="routes">
+      <!-- مثال بطاقات: يمكن ان تُنشأ ديناميكياً لاحقاً -->
+      <div class="card">
+        <div class="route-info">
+          <h3>Register a new user</h3>
+          <div class="path">/auth/register</div>
+        </div>
+        <div><span class="badge POST">POST</span></div>
+      </div>
+
+      <div class="card">
+        <div class="route-info">
+          <h3>Login</h3>
+          <div class="path">/auth/login</div>
+        </div>
+        <div><span class="badge POST">POST</span></div>
+      </div>
+
+      <div class="card">
+        <div class="route-info">
+          <h3>Create device anonymous account</h3>
+          <div class="path">/auth/device-anon</div>
+        </div>
+        <div><span class="badge POST">POST</span></div>
+      </div>
+
+      <div class="card">
+        <div class="route-info">
+          <h3>Get current user profile</h3>
+          <div class="path">/users/me</div>
+        </div>
+        <div><span class="badge GET">GET</span></div>
+      </div>
     </div>
+  </main>
 
-    <div class="card">
-      <span class="method GET">GET</span>
-      <h3>Get current user profile</h3>
-      <div>users/me/</div>
-    </div>
+  <footer>
+    يعمل أوفلاين — Muhasaba PWA &copy; <span id="yr"></span>
+  </footer>
 
-  </div>
-
-</div>
-
-<footer>
-  يعمل بدون إنترنت — نسخة PWA Muhasaba
-</footer>
-
-<!-- Service Worker -->
 <script>
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./service-worker.js')
-    .then(() => console.log('SW registered'))
-    .catch(err => console.warn('SW failed', err));
-}
-</script>
+/* Theme toggle */
+const root = document.documentElement;
+const themeBtn = document.getElementById('toggleTheme');
+const saved = localStorage.getItem('muh_theme');
+if(saved) document.documentElement.setAttribute('data-theme', saved);
+themeBtn.addEventListener('click', () => {
+  const cur = document.documentElement.getAttribute('data-theme');
+  const next = cur === 'dark' ? '' : 'dark';
+  if(next) document.documentElement.setAttribute('data-theme', next); else document.documentElement.removeAttribute('data-theme');
+  localStorage.setItem('muh_theme', next);
+});
 
-<!-- بحث بسيط -->
-<script>
-document.getElementById("search").addEventListener("input", function() {
-  const q = this.value.toLowerCase();
-  document.querySelectorAll(".card").forEach(card => {
-    card.style.display =
-      card.innerText.toLowerCase().includes(q) ? "block" : "none";
+/* Search */
+document.getElementById('search').addEventListener('input', function(){
+  const q = this.value.trim().toLowerCase();
+  document.querySelectorAll('.card').forEach(card => {
+    card.style.display = card.innerText.toLowerCase().includes(q) ? 'flex' : 'none';
   });
+});
+
+/* footer year */
+document.getElementById('yr').innerText = new Date().getFullYear();
+
+/* Service Worker registration (relative path) */
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('./service-worker.js').then(reg => {
+    console.log('SW registered', reg);
+    // listen for updates
+    reg.addEventListener('updatefound', () => {
+      const nw = reg.installing;
+      nw.addEventListener('statechange', () => {
+        if(nw.state === 'installed') {
+          // new SW available
+          console.log('New SW installed');
+        }
+      });
+    });
+  }).catch(e => console.warn('SW register failed', e));
+}
+
+/* Update button - send message to SW to skipWaiting */
+document.getElementById('updateApp').addEventListener('click', async () => {
+  const reg = await navigator.serviceWorker.getRegistration();
+  if(reg && reg.waiting){
+    reg.waiting.postMessage({type:'SKIP_WAITING'});
+    // reload when controller changes
+    navigator.serviceWorker.addEventListener('controllerchange', () => location.reload());
+  } else {
+    // if no waiting SW, force client reload to pick latest
+    location.reload();
+  }
+});
+
+/* Clear cache button - programatic clear (and reload) */
+document.getElementById('clearCache').addEventListener('click', async () => {
+  try {
+    const keys = await caches.keys();
+    await Promise.all(keys.map(k => caches.delete(k)));
+    // unregister SWs
+    const regs = await navigator.serviceWorker.getRegistrations();
+    await Promise.all(regs.map(r => r.unregister()));
+    alert('تم مسح الكاش وإلغاء تسجيل Service Worker. ستُعاد تحميل الصفحة.');
+    location.reload(true);
+  } catch(e){
+    alert('حدث خطأ أثناء مسح الكاش.');
+    console.error(e);
+  }
 });
 </script>
 
