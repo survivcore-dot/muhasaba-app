@@ -1,7 +1,139 @@
-<!-- في <head> -->
-<link rel="manifest" href="./manifest.json">
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<!-- قبل إغلاق </body> سجل الـ service worker بهذا السطر (نسبياً) -->
+  <title>Muhasaba — Offline API Viewer</title>
+
+  <!-- Manifest -->
+  <link rel="manifest" href="./manifest.json">
+
+  <!-- Theme color -->
+  <meta name="theme-color" content="#213a47">
+
+  <!-- Icons -->
+  <link rel="icon" href="./assets/icons/icon-192.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="./assets/icons/icon-192.svg">
+
+  <!-- Style (بسيط مدمج داخل الصفحة لتجنب أي مشاكل) -->
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      background: #f7f9fa;
+      direction: rtl;
+      text-align: right;
+    }
+
+    header {
+      background: #213a47;
+      color: white;
+      padding: 20px;
+      text-align: center;
+      font-size: 24px;
+      font-weight: bold;
+    }
+
+    .subtitle {
+      color: #ddd;
+      font-size: 14px;
+      margin-top: -8px;
+    }
+
+    .container {
+      padding: 16px;
+      max-width: 800px;
+      margin: auto;
+    }
+
+    .search-box input {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+      margin-bottom: 20px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    }
+
+    .method {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 14px;
+      color: white;
+      margin-bottom: 8px;
+    }
+
+    .POST { background: #2A9D8F; }
+    .GET { background: #0E8CE8; }
+
+    footer {
+      text-align: center;
+      font-size: 14px;
+      color: #666;
+      padding: 20px 0;
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  Muhasaba
+  <div class="subtitle">محاسبة روحية — مستندات API ووضع أوفلاين</div>
+</header>
+
+<div class="container">
+
+  <div class="search-box">
+    <input id="search" type="text" placeholder="ابحث عن مسار أو كلمة..." />
+  </div>
+
+  <!-- عيّنة من المسارات -->
+  <div id="routes">
+
+    <div class="card">
+      <span class="method POST">POST</span>
+      <h3>Register a new user</h3>
+      <div>auth/register/</div>
+    </div>
+
+    <div class="card">
+      <span class="method POST">POST</span>
+      <h3>Login</h3>
+      <div>auth/login/</div>
+    </div>
+
+    <div class="card">
+      <span class="method POST">POST</span>
+      <h3>Create device anonymous account</h3>
+      <div>auth/device-anon/</div>
+    </div>
+
+    <div class="card">
+      <span class="method GET">GET</span>
+      <h3>Get current user profile</h3>
+      <div>users/me/</div>
+    </div>
+
+  </div>
+
+</div>
+
+<footer>
+  يعمل بدون إنترنت — نسخة PWA Muhasaba
+</footer>
+
+<!-- Service Worker -->
 <script>
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./service-worker.js')
@@ -9,3 +141,17 @@ if ('serviceWorker' in navigator) {
     .catch(err => console.warn('SW failed', err));
 }
 </script>
+
+<!-- بحث بسيط -->
+<script>
+document.getElementById("search").addEventListener("input", function() {
+  const q = this.value.toLowerCase();
+  document.querySelectorAll(".card").forEach(card => {
+    card.style.display =
+      card.innerText.toLowerCase().includes(q) ? "block" : "none";
+  });
+});
+</script>
+
+</body>
+</html>
