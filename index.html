@@ -221,8 +221,33 @@ $('#installBtn').addEventListener('click', async () => {
   }
 });
 
-/* Register SW (relative) */
-if('serviceWorker' in navigator){
+/* register service worker with correct scope (works for GitHub Pages subpath) */
+if ('serviceWorker' in navigator) {
+  const isGitHubPages = location.hostname.endsWith('github.io');
+  let base = '/';
+
+  if (isGitHubPages) {
+    const parts = location.pathname.split('/').filter(Boolean);
+    if (parts.length) base = '/' + parts[0] + '/';
+  }
+
+  const swUrl = base + 'service-worker.js';
+
+  navigator.serviceWorker.register(swUrl, { scope: base })
+    .then(reg => {
+      console.log('ServiceWorker registered at', swUrl, 'scope', base, reg);
+      if (reg.waiting) showToast('نسخة جديدة جاهزة. اضغط تحديث.');
+      reg.addEventListener('updatefound', () => {
+        const nw = reg.installing;
+        nw.addEventListener('statechange', () => {
+          if (nw.state === 'installed') showToast('تحديث جاهز. اضغط تحديث.');
+        });
+      });
+    })
+    .catch(err => {
+      console.warn('SW registration failed:', err);
+    });
+}{
   navigator.serviceWorker.register('./service-worker.js').then(reg => {
     console.log('SW registered', reg);
     // handle waiting SW -> show toast
